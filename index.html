@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html>
+ <head>
+     <meta charset="utf-8"> 
+     <title>My first three.js app</title> 
+     <style> body { margin: 0; } </style> 
+ </head> 
+ <body> 
+
+    <div id="info">
+		<b>Enter</b> change orthographic and perspective mode<br/>
+        <b>w</b> move front,  <b>s</b> move back,  <b>a</b> move left,  <b>d</b> move right
+		</div>
+
+    <script type='module'>
+        import * as THREE from 'https://threejsfundamentals.org/threejs/resources/threejs/r127/build/three.module.js';
+        import { OrbitControls } from 'https://threejsfundamentals.org/threejs/resources/threejs/r127/examples/jsm/controls/OrbitControls.js';
+        
+
+ // ********** setting the scene **********
+const scene = new THREE.Scene();
+
+// ********** setting the camera **********
+let aspect = window.innerWidth / window.innerHeight;
+const camera = new THREE.PerspectiveCamera(75, aspect, 0.1, 1000); // camera field of view in degrees, aspect ratio, near, far clipping plane distance
+camera.position.set(0, -100, 10);
+camera.lookAt(0,0,0);
+const camera2 = new THREE.OrthographicCamera( window.innerWidth / - 2, window.innerWidth / 2, window.innerHeight / 2, window.innerHeight / - 2, -100, 1000 );
+camera2.position.set(0, -100, 10);
+camera2.lookAt(0,0,0);
+camera2.zoom = 10;
+
+let activeCamera = camera2;
+
+// ********** setting the renderer **********
+const renderer = new THREE.WebGLRenderer({ antialias : true }); 
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+document.body.appendChild(renderer.domElement);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+//const controls2 = new OrbitControls(camera2, renderer.domElement);
+
+// ********** setting the light **********
+const directionalLight = new THREE.DirectionalLight({color : 0xFFFFFF, intensity: 1.5});
+const direc_helper = new THREE.DirectionalLightHelper( directionalLight, 3 );
+directionalLight.castShadow = true;
+directionalLight.shadow.mapSize.width = 1024;
+directionalLight.shadow.mapSize.height = 1024;
+directionalLight.position.set(20, -50, 20); 
+directionalLight.lookAt(0,0,0);
+
+scene.add(direc_helper);
+scene.add(directionalLight);
+
+// ********** setting the frame Geometry **********
+const frame_group = new THREE.Group();
+
+const yellow_Geo = new THREE.BoxGeometry(30, 30, 3);
+const yellow_Geo2 = new THREE.BoxGeometry(10,10,10);
+const yellow_Mat = new THREE.MeshStandardMaterial({ color: 0xffc91e });
+const yellow_Mesh1 = new THREE.Mesh(yellow_Geo, yellow_Mat);
+const yellow_Mesh2 = new THREE.Mesh(yellow_Geo, yellow_Mat);
+const yellow_Mesh3 = new THREE.Mesh(yellow_Geo, yellow_Mat);
+const yellow_Mesh4 = new THREE.Mesh(yellow_Geo2, yellow_Mat);
+yellow_Mesh2.position.set(0,0,-15);
+yellow_Mesh3.position.set(0,0,30);
+yellow_Mesh4.position.set(-7,-12,-7.5);
+yellow_Mesh1.receiveShadow = true;
+yellow_Mesh4.castShadow = true;
+frame_group.add(yellow_Mesh1);
+frame_group.add(yellow_Mesh2);
+frame_group.add(yellow_Mesh3);
+frame_group.add(yellow_Mesh4);
+
+const brown_Geo = new THREE.BoxGeometry(30,30,12);
+const brown_Geo2 = new THREE.BoxGeometry(25,25,1);
+const brown_Mat = new THREE.MeshStandardMaterial({ color: 0x824c20 });
+const brown_Mesh = new THREE.Mesh(brown_Geo, brown_Mat);
+const brown_Mesh2 = new THREE.Mesh(brown_Geo2, brown_Mat);
+brown_Mesh.position.set(0,0,-7.5);
+brown_Mesh2.position.set(0,0,32);
+brown_Mesh2.castShadow = true;
+frame_group.add(brown_Mesh);
+frame_group.add(brown_Mesh2);
+
+const silver_Geo = new THREE.BoxGeometry(4,10,10);
+const silver_Geo2 = new THREE.BoxGeometry(4,10,5);
+const silver_Mat = new THREE.MeshStandardMaterial({ color: 0xdad6cb });
+const silver_Mesh = new THREE.Mesh(silver_Geo, silver_Mat);
+const silver_Mesh2 = new THREE.Mesh(silver_Geo2, silver_Mat);
+silver_Mesh.position.set(7,-12,-7.5);
+silver_Mesh2.position.set(0,0,34);
+silver_Mesh.castShadow = true;
+silver_Mesh2.castShadow = true;
+frame_group.add(silver_Mesh);
+frame_group.add(silver_Mesh2);
+
+const glass_Geo = new THREE.BoxGeometry(30,30,30);
+const glass_Mat = new THREE.MeshLambertMaterial({color: 0xffffff, transparent: true, opacity: 0.2});
+const glass_Mesh = new THREE.Mesh(glass_Geo, glass_Mat);
+glass_Mesh.position.set(0,0,15);
+frame_group.add(glass_Mesh);
+
+frame_group.position.y -= 30;
+frame_group.rotation.z -= 0.2;
+scene.add(frame_group);
+
+
+// ********** load the object **********
+ 
+const num_of_sphere = 20;
+const sphere = [];
+const speedx = [];
+const speedy = [];
+const speedz = [];
+
+for (let i = 0 ; i<num_of_sphere ; i++) {
+    
+    speedx[i] = Math.random()-0.5;
+    speedy[i] = Math.random()-0.5;
+    speedz[i] = Math.random()-0.5;
+
+    let geometry = new THREE.SphereGeometry( 2, 32, 32);
+    let material = new THREE.MeshStandardMaterial( {color:  Math.random() * 0xffffff} );
+    sphere[i] = new THREE.Mesh( geometry, material );
+    sphere[i].castShadow = true;
+    sphere[i].receiveShadow = true;
+    
+    sphere[i].position.set(0,0,15);
+    frame_group.add(sphere[i]);
+}
+
+document.addEventListener( 'keydown', onKeyDown );
+
+// ********** key event **********
+
+function onKeyDown( event ) {
+
+switch ( event.keyCode ) {
+
+    case 13: /*enter*/
+        if (activeCamera == camera) activeCamera = camera2;
+        else {
+            activeCamera = camera;
+            camera.position.set(0, -100, 10);
+            camera.lookAt(0,0,0);
+        }
+        break;
+
+    case 83: /*S*/
+    camera.position.y -= 0.5;
+    break;
+
+    case 87: /*w*/
+    camera.position.y += 0.5;
+    break;
+
+    case 65: /*w*/
+    camera.position.x -= 0.5;
+    break;
+
+    case 68: /*d*/
+    camera.position.x += 0.5;
+    break;
+    }
+}
+
+// ********** draw function **********
+
+function draw() {
+
+    for (let i = 0 ; i<num_of_sphere ; i++) {
+    sphere[i].position.x += speedx[i];
+    sphere[i].position.y += speedy[i];
+    sphere[i].position.z += speedz[i];
+    if (sphere[i].position.x > 13 || sphere[i].position.x < -13) speedx[i] = -speedx[i];
+    if (sphere[i].position.y > 13 || sphere[i].position.y < -13) speedy[i] = -speedy[i];
+    if (sphere[i].position.z > 26 || sphere[i].position.z < 3) speedz[i] = -speedz[i];
+    }
+
+    if ( activeCamera === camera ) camera.updateProjectionMatrix();
+    else camera2.updateProjectionMatrix();
+
+    renderer.clear();
+    renderer.render( scene, activeCamera );
+}
+
+function animate() {
+    requestAnimationFrame( animate );
+    draw();
+}
+
+animate();
+//requestAnimationFrame(draw);
+
+ </script>
+ </body>
+ </html>
